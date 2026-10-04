@@ -1,0 +1,336 @@
+```html
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Location Scanner</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background:
+                radial-gradient(circle at top, #243b55, transparent 45%),
+                linear-gradient(135deg, #050b16, #0b1525);
+            color: white;
+            overflow: hidden;
+        }
+
+        /* Hiệu ứng nền */
+        body::before {
+            content: "";
+            position: fixed;
+            width: 500px;
+            height: 500px;
+            border: 1px solid rgba(0, 200, 255, 0.15);
+            border-radius: 50%;
+            animation: rotate 15s linear infinite;
+        }
+
+        @keyframes rotate {
+            from {
+                transform: rotate(0deg) scale(1);
+            }
+            to {
+                transform: rotate(360deg) scale(1.2);
+            }
+        }
+
+        .container {
+            width: 420px;
+            max-width: 90%;
+            padding: 35px;
+            border-radius: 25px;
+            background: rgba(15, 25, 40, 0.82);
+            border: 1px solid rgba(0, 200, 255, 0.25);
+            box-shadow: 0 25px 80px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(15px);
+            text-align: center;
+            position: relative;
+            z-index: 2;
+        }
+
+        .icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 20px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 38px;
+            background: rgba(0, 200, 255, 0.1);
+            border: 2px solid #00c8ff;
+            box-shadow: 0 0 30px rgba(0, 200, 255, 0.3);
+        }
+
+        h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #9fb3c8;
+            font-size: 14px;
+            margin-bottom: 28px;
+        }
+
+        button {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #00c8ff, #0077ff);
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.25s;
+            box-shadow: 0 8px 25px rgba(0, 136, 255, 0.3);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 35px rgba(0, 200, 255, 0.45);
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        #status {
+            margin-top: 20px;
+            color: #8fa6bd;
+            font-size: 14px;
+        }
+
+        .result {
+            display: none;
+            margin-top: 22px;
+            padding: 20px;
+            border-radius: 15px;
+            background: rgba(0, 0, 0, 0.25);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            text-align: left;
+        }
+
+        .result.show {
+            display: block;
+            animation: appear 0.4s ease;
+        }
+
+        @keyframes appear {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .coordinate {
+            margin: 10px 0;
+            padding: 12px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .label {
+            display: block;
+            color: #7f9bb5;
+            font-size: 12px;
+            margin-bottom: 5px;
+        }
+
+        .value {
+            color: #00d9ff;
+            font-weight: bold;
+            word-break: break-all;
+        }
+
+        .map-button {
+            display: block;
+            margin-top: 15px;
+            padding: 12px;
+            text-align: center;
+            border-radius: 10px;
+            text-decoration: none;
+            color: white;
+            background: rgba(0, 200, 255, 0.12);
+            border: 1px solid rgba(0, 200, 255, 0.25);
+            transition: 0.2s;
+        }
+
+        .map-button:hover {
+            background: rgba(0, 200, 255, 0.25);
+        }
+
+        .warning {
+            color: #ffb86c !important;
+        }
+
+        .error {
+            color: #ff6b6b !important;
+        }
+
+        .footer {
+            margin-top: 20px;
+            font-size: 11px;
+            color: #61758a;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+
+        <div class="icon">📍</div>
+
+        <h1>Location Scanner</h1>
+
+        <p class="subtitle">
+            Xác định vị trí hiện tại của thiết bị
+        </p>
+
+        <button id="locationButton" onclick="getLocation()">
+            📡 Lấy vị trí của tôi
+        </button>
+
+        <p id="status">
+            Sẵn sàng quét vị trí
+        </p>
+
+        <div class="result" id="result">
+
+            <div class="coordinate">
+                <span class="label">VĨ ĐỘ</span>
+                <span class="value" id="latitude">---</span>
+            </div>
+
+            <div class="coordinate">
+                <span class="label">KINH ĐỘ</span>
+                <span class="value" id="longitude">---</span>
+            </div>
+
+            <a id="mapLink"
+               class="map-button"
+               href="#"
+               target="_blank">
+                🗺️ Mở vị trí trên bản đồ
+            </a>
+
+        </div>
+
+        <p class="footer">
+            🔒 Vị trí chỉ được lấy khi bạn cho phép trình duyệt.
+        </p>
+
+    </div>
+
+<script>
+
+function getLocation() {
+
+    const status = document.getElementById("status");
+    const button = document.getElementById("locationButton");
+    const result = document.getElementById("result");
+
+    if (!navigator.geolocation) {
+
+        status.textContent =
+            "❌ Trình duyệt không hỗ trợ định vị.";
+
+        status.className = "error";
+
+        return;
+    }
+
+    status.textContent =
+        "📡 Đang xác định vị trí...";
+
+    status.className = "";
+
+    button.disabled = true;
+    button.textContent = "⏳ Đang quét...";
+
+    navigator.geolocation.getCurrentPosition(
+
+        (position) => {
+
+            const lat = position.coords.latitude;
+            const lon = position.coords.longitude;
+
+            document.getElementById("latitude").textContent =
+                lat.toFixed(7);
+
+            document.getElementById("longitude").textContent =
+                lon.toFixed(7);
+
+            document.getElementById("mapLink").href =
+                `https://www.google.com/maps?q=${lat},${lon}`;
+
+            result.classList.add("show");
+
+            status.textContent =
+                "✅ Đã xác định vị trí thành công.";
+
+            status.className = "";
+
+            button.disabled = false;
+            button.textContent = "🔄 Quét lại vị trí";
+        },
+
+        (error) => {
+
+            button.disabled = false;
+            button.textContent = "📡 Lấy vị trí của tôi";
+
+            status.className = "error";
+
+            if (error.code === 1) {
+                status.textContent =
+                    "❌ Bạn đã từ chối quyền truy cập vị trí.";
+            }
+
+            else if (error.code === 2) {
+                status.textContent =
+                    "❌ Không thể xác định vị trí.";
+            }
+
+            else if (error.code === 3) {
+                status.textContent =
+                    "❌ Hết thời gian xác định vị trí.";
+            }
+
+            else {
+                status.textContent =
+                    "❌ Đã xảy ra lỗi khi lấy vị trí.";
+            }
+        },
+
+        {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 0
+        }
+    );
+}
+
+</script>
+
+</body>
+</html>
+```
